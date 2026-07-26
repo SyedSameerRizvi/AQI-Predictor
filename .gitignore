@@ -1,0 +1,27 @@
+# virtual environment
+.venv/
+
+# secrets 
+.env
+
+# python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# hopsworks / requests local cache
+.cache*
+*.sqlite
+
+# jupyter
+.ipynb_checkpoints/
+
+# saved figures 
+reports/figures/*.png
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# VS Code 
+.vscode/
