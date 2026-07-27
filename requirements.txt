@@ -27,3 +27,8 @@ jupyter
 # dev tooling 
 ruff
 pytest
+
+# additinal tools found on the way that needs to be installed for the project to work
+pyarrow
+deltalake 
+confluent-kafka
