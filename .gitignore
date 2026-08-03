@@ -16,8 +16,11 @@ __pycache__/
 # jupyter
 .ipynb_checkpoints/
 
-# saved figures 
 reports/figures/*.png
+
+# local run state
+backfill_checkpoint.json
+
 
 # OS junk
 .DS_Store
