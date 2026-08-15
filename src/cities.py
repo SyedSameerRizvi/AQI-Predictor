@@ -28,8 +28,8 @@ CITIES = [
     City("pk-faisalabad", "Faisalabad", 31.4504, 73.1350, "Asia/Karachi", tier=2),
     City("pk-rawalpindi", "Rawalpindi", 33.5651, 73.0169, "Asia/Karachi", tier=2),
     City("pk-multan",     "Multan",     30.1575, 71.5249, "Asia/Karachi", tier=2),
-    City("pk-peshawar",   "Peshawar",   34.0151, 71.5249, "Asia/Karachi", tier=2),
-    City("pk-quetta",     "Quetta",     30.1798, 66.9750, "Asia/Karachi", tier=2),
+    City("pk-peshawar",   "Peshawar",   34.0151, 71.5249, "Asia/Karachi", tier=1),
+    City("pk-quetta",     "Quetta",     30.1798, 66.9750, "Asia/Karachi", tier=1),
     City("pk-hyderabad",  "Hyderabad",  25.3960, 68.3578, "Asia/Karachi", tier=2),
     City("pk-gujranwala", "Gujranwala", 32.1877, 74.1945, "Asia/Karachi", tier=2),
 ]

@@ -32,3 +32,5 @@ pytest
 pyarrow
 deltalake 
 confluent-kafka
+
+joblib>=1.3
