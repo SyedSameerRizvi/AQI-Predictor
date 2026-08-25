@@ -1,23 +1,40 @@
-import { useState } from "react";
-import LineChart, { Line } from "@/components/charts/line-chart";
-import { Grid } from "@/components/charts/grid";
-import { XAxis } from "@/components/charts/x-axis";
-import { ChartTooltip } from "@/components/charts/tooltip";
-import { CurrentAqiCard } from "@/components/CurrentAqiCard";
+import { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { ForecastChart } from "@/components/ForecastChart";
+import { Hero } from "@/components/Hero";
 import { CitySelector } from "@/components/CitySelector";
 import { AqiAlert } from "@/components/AqiAlert";
-import { HorizonPanel } from "@/components/HorizonPanel";
-import { mockCities, fetchForecast, fetchMetrics } from "@/lib/mockForecast";
-import type { CityForecast, HorizonMetrics } from "@/lib/types";
+import { HorizonTimeline } from "@/components/HorizonTimeline";
+import { DriversPanel } from "@/components/DriversPanel";
+import { AiSummary } from "@/components/AiSummary";
+import { Footer } from "@/components/Footer";
+import { CookieBanner } from "@/components/CookieBanner";
+import { NewsPanel } from "@/components/NewsPanel";
+import { fetchForecast, fetchMetrics, fetchCities } from "@/lib/mockForecast";
+import { bandForAqi } from "@/lib/aqiBands";
+import type { CityForecast, HorizonMetrics, ServedCity } from "@/lib/types";
+
+const BRAND = "#c5f82a"; // lime, used before a city is picked
 
 function App() {
-  const [selectedCity, setSelectedCity] = useState(mockCities[0].city_id);
+  const [cities, setCities] = useState<ServedCity[]>([]);
+  const [selectedCity, setSelectedCity] = useState<string>("");
   const [data, setData] = useState<CityForecast | null>(null);
   const [metrics, setMetrics] = useState<HorizonMetrics[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    fetchCities()
+      .then((list) => {
+        setCities(list);
+        if (list.length > 0) setSelectedCity(list[0].city_id);
+      })
+      .catch(() => setCities([]));
+  }, []);
+
   async function handlePredict() {
+    if (!selectedCity) return;
     setLoading(true);
     setError(null);
     setData(null);
@@ -35,80 +52,135 @@ function App() {
     }
   }
 
-  const chartData =
-    data?.forecast.map((p) => ({ ...p, date: new Date(p.valid_at) })) ?? [];
+  const band = data ? bandForAqi(data.current.aqi) : null;
+  const accent = band?.color ?? BRAND;
 
   return (
-    <div className="min-h-screen bg-slate-900 p-10 text-white">
-      <h1 className="mb-6 text-2xl font-bold">Pakistan AQI Forecast</h1>
+    <div className="relative min-h-screen bg-[#0a0a0a] text-white">
+      <CookieBanner />
 
-      <div className="mb-4">
-        <CitySelector
-          cities={mockCities}
-          selected={selectedCity}
-          onSelect={(id) => {
-            setSelectedCity(id);
-            setData(null);        // clear stale forecast when city changes
-            setError(null);
-          }}
-        />
+      <div className="mx-auto max-w-5xl px-6 py-14 sm:px-10">
+        {/* masthead - portfolio-style: mono tag + big display title with highlight marker */}
+        <header className="mb-12">
+          <div className="mb-4 inline-block bg-white/10 px-2 py-1 font-mono text-[11px] uppercase tracking-[0.2em] text-white/60">
+            Pakistan air quality
+          </div>
+          <h1 className="font-display text-5xl font-black uppercase leading-[0.9] tracking-tight sm:text-7xl">
+            Three-day{" "}
+            <span
+              className="box-decoration-clone px-2"
+              style={{ background: accent, color: "#0a0a0a" }}
+            >
+              AQI forecast
+            </span>
+          </h1>
+          <p className="mt-5 max-w-xl font-sans text-base text-white/50">
+            Hourly air-quality predictions for the next 72 hours, from a machine-learning
+            model trained on two years of data.
+          </p>
+        </header>
+
+        {/* controls */}
+        <div className="mb-5">
+          <CitySelector
+            cities={cities}
+            selected={selectedCity}
+            band={band}
+            onSelect={(id) => {
+              setSelectedCity(id);
+              setData(null);
+              setError(null);
+            }}
+          />
+        </div>
+
+        <motion.button
+          onClick={handlePredict}
+          disabled={loading || !selectedCity}
+          whileTap={{ scale: 0.97 }}
+          className="mb-14 border-2 px-8 py-3 font-display text-sm font-extrabold uppercase tracking-wide transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+          style={{ background: accent, color: "#0a0a0a", borderColor: accent }}
+        >
+          {loading ? "Predicting..." : "Predict next 3 days >"}
+        </motion.button>
+
+        {/* idle */}
+        {!loading && !data && !error && (
+          <p className="font-mono text-sm uppercase tracking-wide text-white/35">
+            Pick a city and predict to see the next 72 hours.
+          </p>
+        )}
+
+        {/* loading */}
+        {loading && (
+          <div className="flex items-center gap-3 font-mono text-sm uppercase tracking-wide text-white/50">
+            <span
+              className="h-4 w-4 animate-spin border-2 border-white/15"
+              style={{ borderTopColor: accent }}
+            />
+            Reading the air...
+          </div>
+        )}
+
+        {/* error */}
+        {error && (
+          <div className="border-2 border-red-500 bg-red-500/10 px-5 py-3 font-mono text-sm text-red-300">
+            {error}
+          </div>
+        )}
+
+        {/* loaded */}
+        <AnimatePresence>
+          {data && !loading && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.35 }}
+              className="space-y-10"
+            >
+              <AqiAlert data={data} />
+              <Hero data={data} />
+              <AiSummary summary={data.ai_summary} accent={accent} />
+
+              <div>
+                <SectionTag n="01" label="Three-day outlook" accent={accent} />
+                <HorizonTimeline data={data} metrics={metrics} />
+              </div>
+
+              <div>
+                <SectionTag n="02" label="Hourly forecast" accent={accent} />
+                <div className="border-2 border-white/15 bg-black p-5 shadow-hard">
+                  <ForecastChart data={data} />
+                </div>
+              </div>
+
+              <div>
+                <SectionTag n="03" label="In the news" accent={accent} />
+                <NewsPanel accent={accent} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <Footer />
       </div>
+    </div>
+  );
+}
 
-      <button
-        onClick={handlePredict}
-        disabled={loading}
-        className="mb-8 rounded-lg bg-sky-500 px-6 py-2 font-semibold text-white transition-colors hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-50"
+// portfolio-style numbered section tag
+function SectionTag({ n, label, accent }: { n: string; label: string; accent: string }) {
+  return (
+    <div className="mb-4 flex items-center gap-3">
+      <span
+        className="px-2 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wide"
+        style={{ background: accent, color: "#0a0a0a" }}
       >
-        {loading ? "Predicting..." : "Predict next 3 days"}
-      </button>
-
-      {/* idle: nothing chosen yet */}
-      {!loading && !data && !error && (
-        <p className="text-slate-500">
-          Select a city and click Predict to see the next 72 hours.
-        </p>
-      )}
-
-      {/* loading */}
-      {loading && (
-        <div className="flex items-center gap-3 text-slate-400">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-sky-400" />
-          Fetching forecast...
-        </div>
-      )}
-
-      {/* error */}
-      {error && (
-        <div className="rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-3 text-red-300">
-          {error}
-        </div>
-      )}
-
-      {/* loaded */}
-      {data && !loading && (
-        <div className="space-y-6">
-          <div className="max-w-2xl">
-            <AqiAlert data={data} />
-          </div>
-
-          <div className="max-w-xs">
-            <CurrentAqiCard cityName={data.city_name} current={data.current} />
-          </div>
-
-          <div className="max-w-3xl">
-            <HorizonPanel data={data} metrics={metrics} />
-          </div>
-
-          <div className="h-[500px] w-full max-w-3xl">
-            <LineChart data={chartData} xDataKey="date">
-              <Grid horizontal />
-              <Line dataKey="aqi" />
-              <XAxis />
-              <ChartTooltip />
-            </LineChart>
-          </div>
-        </div>
-      )}
+        {n}
+      </span>
+      <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-white/45">
+        {label}
+      </span>
     </div>
   );
 }

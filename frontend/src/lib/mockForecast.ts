@@ -1,5 +1,5 @@
 // src/lib/mockForecast.ts
-import type { CityForecast, ServedCity } from "./types";
+import type { CityForecast, NewsItem, ServedCity } from "./types";
 import type { HorizonMetrics } from "./types";
 
 // mirrors list_served_cities() — the 5 trained tier-1 cities
@@ -87,15 +87,32 @@ export const mockForecasts: Record<string, CityForecast> = Object.fromEntries(
 
 // simulates the future GET /forecast/{city_id} call.
 // later: replace the body with a real fetch to FastAPI.
+const API = "http://localhost:8000";
+
 export async function fetchForecast(cityId: string): Promise<CityForecast> {
-  await new Promise((r) => setTimeout(r, 700));   // fake network delay
-  const data = mockForecasts[cityId];
-  if (!data) throw new Error(`No forecast available for ${cityId}`);
-  return data;
+  const res = await fetch(`${API}/forecast/${cityId}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail ?? `Forecast failed (${res.status})`);
+  }
+  return res.json();
 }
 
-// simulates GET /metrics filtered by city
 export async function fetchMetrics(cityId: string): Promise<HorizonMetrics[]> {
-  await new Promise((r) => setTimeout(r, 100));
-  return mockMetrics.filter((m) => m.city === cityId);
+  const res = await fetch(`${API}/metrics?city=${cityId}`);
+  if (!res.ok) throw new Error(`Metrics failed (${res.status})`);
+  return res.json();
+}
+
+
+export async function fetchCities(): Promise<ServedCity[]> {
+  const res = await fetch(`${API}/cities`);
+  if (!res.ok) throw new Error(`Cities failed (${res.status})`);
+  return res.json();
+}
+
+export async function fetchNews(): Promise<NewsItem[]> {
+  const res = await fetch(`${API}/news`);
+  if (!res.ok) throw new Error(`News failed (${res.status})`);
+  return res.json();
 }

@@ -17,14 +17,20 @@ export interface CurrentAqi {
   colour: string;
 }
 
-// full predict_city(city_id) return
+export interface AiSummary {
+  happening: string;
+  why: string;
+  advice: string;
+}
+
 export interface CityForecast {
   city_id: string;
   city_name: string;
   generated_at: string;
   current: CurrentAqi;
   forecast: ForecastPoint[];
-  explanations: string[];     // explain_prediction returns plain sentences
+  explanations: string[];
+  ai_summary?: AiSummary;
 }
 
 // list_served_cities() — for the city selector
@@ -42,3 +48,6 @@ export interface HorizonMetrics {
   r2: number;
   skill: number;
 }
+
+export interface NewsItem { title: string; url: string; source: string; published_at: string; }
+
