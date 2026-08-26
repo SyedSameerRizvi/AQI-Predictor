@@ -79,6 +79,29 @@ def train_models(train, val, feature_cols):
     return models
 
 
+def compute_shap(models, train, feature_cols):
+    import shap
+    X = train[feature_cols]
+    # sample for speed; full training set is overkill for global importance
+    Xs = X.sample(min(2000, len(X)), random_state=42)
+    out = {}
+    for h in FORECAST_HORIZONS:
+        explainer = shap.TreeExplainer(models[h])
+        vals = explainer.shap_values(Xs)
+        mean_abs = np.abs(vals).mean(axis=0)
+        mean_signed = vals.mean(axis=0)
+        ranked = sorted(
+            [
+                {"feature": f, "importance": float(a), "direction": float(s)}
+                for f, a, s in zip(feature_cols, mean_abs, mean_signed)
+            ],
+            key=lambda r: r["importance"],
+            reverse=True,
+        )
+        out[f"shap_importance_{h}h"] = ranked
+    return out
+
+
 def evaluate(models, test, feature_cols):
     X_test = test[feature_cols]
     rows = []

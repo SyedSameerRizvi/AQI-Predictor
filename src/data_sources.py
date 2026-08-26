@@ -42,10 +42,10 @@ from src.cities import City
 
 def _make_session() -> requests.Session:
     retry = Retry(
-        total=5,
-        backoff_factor=1.0,
-        status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["GET"],
+    total=3,
+    backoff_factor=1.0,
+    status_forcelist=[500, 502, 503, 504],  # transient server errors only, not 429
+    allowed_methods=["GET"],
     )
     session = requests.Session()
     session.mount("https://", HTTPAdapter(max_retries=retry))

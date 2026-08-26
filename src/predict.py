@@ -18,8 +18,6 @@ import pandas as pd
 
 from src.cities import get_city, City, active_cities
 from src.config import FORECAST_HORIZONS
-from src.feature_engineering import build_features
-from src.data_sources import fetch_forecast
 from src.aqi import aqi_category
 from src.pipelines.training_pipeline import load_model
 
@@ -64,20 +62,18 @@ def _accuracy_for(city_id, horizon):
 
 
 def _latest_feature_row(city: City, bundle) -> pd.DataFrame:
-    # fetch recent + forecast data, build features, return the newest complete row
-    raw = fetch_forecast(city, past_days=10, forecast_days=3)
-    if raw.empty:
-        raise RuntimeError(f"no data returned for {city.city_id}")
+    # read the newest stored row; the hourly pipeline keeps it fresh
+    df = read_latest(city.city_id)
+    if df.empty:
+        raise RuntimeError(f"no stored features for {city.city_id}; run the feature pipeline")
 
-    feats = build_features(raw)
-
-    code = bundle["city_codes"].get(city.city_id, -1)
-    feats["city_code"] = code
+    feats = df.copy()
+    feats["city_code"] = bundle["city_codes"].get(city.city_id, -1)
 
     cols = bundle["feature_cols"]
     usable = feats.dropna(subset=cols)
     if usable.empty:
-        raise RuntimeError(f"not enough history to build features for {city.city_id}")
+        raise RuntimeError(f"stored row for {city.city_id} is missing feature columns")
 
     return usable.iloc[[-1]]
 
