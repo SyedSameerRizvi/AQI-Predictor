@@ -5,7 +5,6 @@ import { Hero } from "@/components/Hero";
 import { CitySelector } from "@/components/CitySelector";
 import { AqiAlert } from "@/components/AqiAlert";
 import { HorizonTimeline } from "@/components/HorizonTimeline";
-import { DriversPanel } from "@/components/DriversPanel";
 import { AiSummary } from "@/components/AiSummary";
 import { Footer } from "@/components/Footer";
 import { CookieBanner } from "@/components/CookieBanner";

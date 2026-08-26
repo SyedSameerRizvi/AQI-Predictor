@@ -87,12 +87,8 @@ export const mockForecasts: Record<string, CityForecast> = Object.fromEntries(
   mockCities.map((c) => [c.city_id, makeForecast(c, baseAqiByCity[c.city_id])])
 );
 
-// simulates the future GET /forecast/{city_id} call.
-// later: replace the body with a real fetch to FastAPI.
-const API = "http://localhost:8000";
-
 export async function fetchForecast(cityId: string): Promise<CityForecast> {
-  const res = await fetch(`${API}/forecast/${cityId}`);
+  const res = await fetch(`${BASE}/forecast/${cityId}`);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body.detail ?? `Forecast failed (${res.status})`);
@@ -101,20 +97,20 @@ export async function fetchForecast(cityId: string): Promise<CityForecast> {
 }
 
 export async function fetchMetrics(cityId: string): Promise<HorizonMetrics[]> {
-  const res = await fetch(`${API}/metrics?city=${cityId}`);
+  const res = await fetch(`${BASE}/metrics?city=${cityId}`);
   if (!res.ok) throw new Error(`Metrics failed (${res.status})`);
   return res.json();
 }
 
 
 export async function fetchCities(): Promise<ServedCity[]> {
-  const res = await fetch(`${API}/cities`);
+  const res = await fetch(`${BASE}/cities`);
   if (!res.ok) throw new Error(`Cities failed (${res.status})`);
   return res.json();
 }
 
 export async function fetchNews(): Promise<NewsItem[]> {
-  const res = await fetch(`${API}/news`);
+  const res = await fetch(`${BASE}/news`);
   if (!res.ok) throw new Error(`News failed (${res.status})`);
   return res.json();
 }
