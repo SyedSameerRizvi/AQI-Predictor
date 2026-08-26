@@ -20,7 +20,7 @@ from src.cities import get_city, City, active_cities
 from src.config import FORECAST_HORIZONS
 from src.aqi import aqi_category
 from src.pipelines.training_pipeline import load_model
-from src.feature_store import read_latest
+from src.feature_store import read_serving
 
 # cache the bundle and metrics so we load them once per process
 _bundle = None
@@ -63,18 +63,24 @@ def _accuracy_for(city_id, horizon):
 
 
 def _latest_feature_row(city: City, bundle) -> pd.DataFrame:
-    # read the newest stored row; the hourly pipeline keeps it fresh
-    df = read_latest(city.city_id)
-    if df.empty:
-        raise RuntimeError(f"no stored features for {city.city_id}; run the feature pipeline")
+    vec = read_serving(city.city_id)
+    if not vec:
+        raise RuntimeError(f"no serving row for {city.city_id}; run the feature pipeline")
 
-    feats = df.copy()
-    feats["city_code"] = bundle["city_codes"].get(city.city_id, -1)
+    row = pd.DataFrame([vec])
+    row["city_code"] = bundle["city_codes"].get(city.city_id, -1)
+
+    # rebuild the UTC timestamp index from the epoch column the pipeline wrote
+    if "generated_at" in row.columns and pd.notna(row["generated_at"].iloc[0]):
+        ts = pd.to_datetime(row["generated_at"].iloc[0], unit="s", utc=True)
+    else:
+        ts = pd.Timestamp.now(tz="UTC")  # fallback so valid_at math never breaks
+    row.index = pd.DatetimeIndex([ts])
 
     cols = bundle["feature_cols"]
-    usable = feats.dropna(subset=cols)
+    usable = row.dropna(subset=[c for c in cols if c in row.columns])
     if usable.empty:
-        raise RuntimeError(f"stored row for {city.city_id} is missing feature columns")
+        raise RuntimeError(f"serving row for {city.city_id} missing feature columns")
 
     return usable.iloc[[-1]]
 

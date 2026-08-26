@@ -111,6 +111,72 @@ def read_latest(city_id: str) -> pd.DataFrame:
     return df.tail(1) if not df.empty else df
 
 
+SERVING_FG_NAME = "aqi_serving"
+SERVING_FG_VERSION = 1
+SERVING_FV_NAME = "aqi_serving_fv"
+SERVING_FV_VERSION = 1
+
+_serving_fg = None
+_fv = None
+
+
+def get_serving_group():
+    """Serving feature group keyed by city_id alone: one current row per city, upserted."""
+    global _serving_fg
+    if _serving_fg is not None:
+        return _serving_fg
+    fs = the_connect()
+    _serving_fg = fs.get_or_create_feature_group(
+        name=SERVING_FG_NAME,
+        version=SERVING_FG_VERSION,
+        description="Latest row per city for low-latency online serving",
+        primary_key=["city_id"],
+        online_enabled=True,
+        time_travel_format="HUDI",
+        stream=True,
+        statistics_config=StatisticsConfig(enabled=False),
+    )
+    return _serving_fg
+
+
+def write_serving(df: pd.DataFrame):
+    """Upsert the latest row per city into the serving group (overwrites by city_id)."""
+    if df.empty:
+        print("write_serving: empty frame, nothing to write")
+        return
+    out = df.copy()
+    # carry the observation time as a plain column so the serving vector keeps it
+    out["generated_at"] = out.index.astype("int64") // 10**9  # epoch seconds, UTC
+    fg = get_serving_group()
+    fg.insert(_prepare(out), write_options={"wait_for_job": False})
+
+
+def _get_feature_view():
+    global _fv
+    if _fv is not None:
+        return _fv
+    fs = the_connect()
+    fg = get_serving_group()
+    _fv = fs.get_or_create_feature_view(
+        name=SERVING_FV_NAME,
+        version=SERVING_FV_VERSION,
+        query=fg.select_all(),
+    )
+    _fv.init_serving()
+    return _fv
+
+
+def read_serving(city_id: str) -> dict:
+    """Light single-row lookup via the serving API. No batch engine, low memory."""
+    fv = _get_feature_view()
+    vec = fv.get_feature_vector(entry={"city_id": city_id})
+    if not vec:
+        return {}
+    cols = fv.schema  # feature order
+    names = [f.name for f in cols]
+    return dict(zip(names, vec))
+
+
 # CLI sanity check 
 if __name__ == "__main__":
     from datetime import datetime, timedelta, timezone
