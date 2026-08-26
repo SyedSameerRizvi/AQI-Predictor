@@ -62,3 +62,4 @@ export function Hero({ data }: HeroProps) {
     </motion.section>
   );
 }
+

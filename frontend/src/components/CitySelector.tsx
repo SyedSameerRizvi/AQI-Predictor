@@ -36,3 +36,4 @@ export function CitySelector({ cities, selected, band, onSelect }: CitySelectorP
     </div>
   );
 }
+

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import type { NewsItem } from "@/lib/types";
-import { fetchNews } from "@/lib/mockForecast";
+import { fetchNews } from "@/lib/api";
 
 interface NewsPanelProps {
   accent: string;
@@ -81,3 +81,4 @@ export function NewsPanel({ accent }: NewsPanelProps) {
     </div>
   );
 }
+

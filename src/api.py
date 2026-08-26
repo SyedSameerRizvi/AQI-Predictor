@@ -29,8 +29,15 @@ def cities():
 
 
 @app.get("/news")
-def news():
-    return fetch_aqi_news()
+def get_news():
+    articles = fetch_aqi_news(max_items=6)
+
+    print("=" * 50)
+    print("NEWS ARTICLES:", articles)
+    print("NUMBER OF ARTICLES:", len(articles))
+    print("=" * 50)
+
+    return articles
 
 @app.get("/metrics")
 def metrics(city: str | None = None):

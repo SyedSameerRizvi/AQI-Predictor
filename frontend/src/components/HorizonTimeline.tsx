@@ -75,3 +75,4 @@ export function HorizonTimeline({ data, metrics }: HorizonTimelineProps) {
     </div>
   );
 }
+

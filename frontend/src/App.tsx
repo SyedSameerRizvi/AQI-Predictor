@@ -10,7 +10,7 @@ import { AiSummary } from "@/components/AiSummary";
 import { Footer } from "@/components/Footer";
 import { CookieBanner } from "@/components/CookieBanner";
 import { NewsPanel } from "@/components/NewsPanel";
-import { fetchForecast, fetchMetrics, fetchCities } from "@/lib/mockForecast";
+import { fetchForecast, fetchMetrics, fetchCities } from "@/lib/api";
 import { bandForAqi } from "@/lib/aqiBands";
 import type { CityForecast, HorizonMetrics, ServedCity } from "@/lib/types";
 
@@ -186,3 +186,4 @@ function SectionTag({ n, label, accent }: { n: string; label: string; accent: st
 }
 
 export default App;
+

@@ -58,3 +58,4 @@ export function Atmosphere({ band }: AtmosphereProps) {
     </div>
   );
 }
+

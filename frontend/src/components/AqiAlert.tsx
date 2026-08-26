@@ -43,3 +43,4 @@ export function AqiAlert({ data }: AqiAlertProps) {
     </AnimatePresence>
   );
 }
+

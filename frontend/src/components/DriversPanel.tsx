@@ -36,3 +36,4 @@ export function DriversPanel({ explanations, accent }: DriversPanelProps) {
     </div>
   );
 }
+

@@ -46,3 +46,4 @@ export function AiSummary({ summary, accent }: AiSummaryProps) {
     </motion.div>
   );
 }
+

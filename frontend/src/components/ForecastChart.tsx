@@ -167,3 +167,4 @@ export function ForecastChart({ data }: ForecastChartProps) {
     </ResponsiveContainer>
   );
 }
+

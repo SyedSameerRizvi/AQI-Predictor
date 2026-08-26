@@ -42,3 +42,4 @@ export function CountUp({ value, className, style, duration = 900 }: CountUpProp
     </span>
   );
 }
+
