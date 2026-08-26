@@ -2,8 +2,8 @@ name: Feature pipeline
 
 on:
   schedule:
-    - cron: "0 * * * *"   # top of every hour, UTC
-  workflow_dispatch: {}     # manual "Run workflow" button
+    - cron: "17 * * * *"   # :17 past every hour (off-peak), UTC
+  workflow_dispatch: {}      # manual "Run workflow" button
 
 jobs:
   update-features:
@@ -11,10 +11,14 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -r requirements-pipeline.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-pipeline.txt
+
       - name: Run feature pipeline
         env:
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
