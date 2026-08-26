@@ -1,4 +1,6 @@
-// src/lib/mockForecast.ts
+const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000"
+
+// src/lib/api.ts
 import type { CityForecast, NewsItem, ServedCity } from "./types";
 import type { HorizonMetrics } from "./types";
 

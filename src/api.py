@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import json
 from pathlib import Path
-
+import os
 from src.cities import get_city
 from src.predict import predict_city, list_served_cities
 from src.ai_summary import summarize_forecast
@@ -12,11 +12,16 @@ from src.news import fetch_aqi_news
 
 app = FastAPI(title="AQI Predictor API")
 
-# allow the vite dev server to call us
+allowed_origins = ["http://localhost:5173"]
+
+frontend_origin = os.getenv("FRONTEND_ORIGIN")
+if frontend_origin:
+    allowed_origins.append(frontend_origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_methods=["GET"],
+    allow_origins=allowed_origins,
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
