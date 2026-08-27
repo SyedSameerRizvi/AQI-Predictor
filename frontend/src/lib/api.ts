@@ -63,13 +63,9 @@ function makeForecast(city: ServedCity, baseAqi: number): CityForecast {
         model_accuracy: 0.65,
       };
     }),
-    explanations: [
-      "The current AQI level is the strongest driver of the forecast",
-      "The AQI an hour ago strongly informs the next few hours",
-      "Current PM2.5 levels push the forecast up",
-      "The AQI at this time last week captures weekly patterns",
-      "Current PM10 levels add to the prediction",
-    ],
+    explanations: {
+      24: [], 48: [], 72: [],
+    },
   };
 }
 

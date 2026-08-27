@@ -23,15 +23,23 @@ export interface AiSummary {
   advice: string;
 }
 
+export interface ShapDriver {
+  feature: string;
+  label: string;
+  importance: number;
+  direction: number;
+}
+
 export interface CityForecast {
   city_id: string;
   city_name: string;
   generated_at: string;
   current: CurrentAqi;
   forecast: ForecastPoint[];
-  explanations: string[];
+  explanations: Record<number, ShapDriver[]>;
   ai_summary?: AiSummary;
 }
+
 
 // list_served_cities() — for the city selector
 export interface ServedCity {
