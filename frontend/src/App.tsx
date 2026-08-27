@@ -8,10 +8,11 @@ import { HorizonTimeline } from "@/components/HorizonTimeline";
 import { AiSummary } from "@/components/AiSummary";
 import { Footer } from "@/components/Footer";
 import { CookieBanner } from "@/components/CookieBanner";
-import { NewsPanel } from "@/components/NewsPanel";
 import { fetchForecast, fetchMetrics, fetchCities } from "@/lib/api";
 import { bandForAqi } from "@/lib/aqiBands";
 import type { CityForecast, HorizonMetrics, ServedCity } from "@/lib/types";
+import { NewsPanel } from "@/components/NewsPanel";
+import { DriversPanel } from "@/components/DriversPanel";
 
 const BRAND = "#c5f82a"; // lime, used before a city is picked
 
@@ -22,6 +23,7 @@ function App() {
   const [metrics, setMetrics] = useState<HorizonMetrics[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [horizon, setHorizon] = useState<number>(24);
 
   useEffect(() => {
     fetchCities()
@@ -152,11 +154,38 @@ function App() {
                   <ForecastChart data={data} />
                 </div>
               </div>
+              
 
-              <div>
-                <SectionTag n="03" label="In the news" accent={accent} />
-                <NewsPanel accent={accent} />
-              </div>
+              {data.explanations && Object.keys(data.explanations).length > 0 && (
+          <div>
+            <SectionTag n="03" label="What's driving this" accent={accent} />
+            <div className="mb-4 flex gap-2">
+              {[24, 48, 72].map((h) => {
+                const active = horizon === h;
+                return (
+                  <button
+                    key={h}
+                    onClick={() => setHorizon(h)}
+                    className="border-2 px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-wide transition-opacity"
+                    style={
+                      active
+                        ? { background: accent, color: "#0a0a0a", borderColor: accent }
+                        : { borderColor: "rgba(255,255,255,0.15)" }
+                    }
+                  >
+                    {h}h
+                  </button>
+                );
+              })}
+            </div>
+            <DriversPanel explanations={data.explanations} horizon={horizon} accent={accent} />
+          </div>
+        )}
+
+        <div>
+          <SectionTag n="04" label="In the news" accent={accent} />
+          <NewsPanel accent={accent} />
+        </div>
             </motion.div>
           )}
         </AnimatePresence>
