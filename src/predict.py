@@ -85,10 +85,10 @@ def _latest_feature_row(city: City, bundle) -> pd.DataFrame:
     return usable.iloc[[-1]]
 
 
-def explain_prediction(bundle) -> list[str]:
-    # turn the top SHAP features into plain language for the dashboard
-    imp = bundle.get("shap_importance_24h")
-    if not imp:
+def explain_prediction(bundle, horizon: int = 24) -> list[dict]:
+    # real per-horizon SHAP drivers, computed at bundle-build time
+    ranked = bundle.get(f"shap_importance_{horizon}h", [])
+    if not ranked:
         return []
 
     readable = {
@@ -102,18 +102,17 @@ def explain_prediction(bundle) -> list[str]:
         "aqi_change_3": "how fast AQI is changing",
         "surface_pressure": "air pressure",
         "wind_u": "wind conditions",
-        "temperature_2m": "temperature",
-        "aqi_ozone": "current ozone levels",
-        "aqi_pm2_5": "current PM2.5 levels",
     }
 
     out = []
-    for item in imp[:5]:
-        label = readable.get(item["feature"], item["feature"])
-        if label not in out:  # avoid duplicate labels
-            out.append(label)
+    for item in ranked[:8]:
+        out.append({
+            "feature": item["feature"],
+            "label": readable.get(item["feature"], item["feature"]),
+            "importance": item["importance"],
+            "direction": item["direction"],
+        })
     return out
-
 
 def predict_city(city_id: str) -> dict:
     """
