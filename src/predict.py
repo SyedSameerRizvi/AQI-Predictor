@@ -159,8 +159,10 @@ def predict_city(city_id: str) -> dict:
             "category": cur_name,
             "colour": cur_colour,
         },
-        "forecast": predictions,
-        "explanations": explain_prediction(bundle),
+       "forecast": predictions,
+        "explanations": {
+            h: explain_prediction(bundle, h) for h in FORECAST_HORIZONS
+        },
     }
 
 
