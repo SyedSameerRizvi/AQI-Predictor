@@ -160,6 +160,19 @@ def load_model():
     return joblib.load(BUNDLE_PATH)
 
 
+def should_promote(new_metrics):
+    """Gate: promote only if 24h and 48h mean R2 do not regress vs incumbent."""
+    if not os.path.exists(METRICS_PATH):
+        return True, "no incumbent metrics, first run"
+    old = pd.read_json(METRICS_PATH)
+    tol = 0.02
+    for h in (24, 48):
+        new_r2 = new_metrics[new_metrics["horizon"] == h]["r2"].mean()
+        old_r2 = old[old["horizon"] == h]["r2"].mean()
+        if new_r2 < old_r2 - tol:
+            return False, f"rejected: {h}h R2 {new_r2:.3f} below incumbent {old_r2:.3f}"
+    return True, "metrics hold vs incumbent"
+
 def main():
     print("loading data and splitting...")
     train, val, test, feature_cols, city_codes = load_and_split()
@@ -173,6 +186,12 @@ def main():
     metrics_df = evaluate(models, test, feature_cols)
     print(metrics_df.to_string(index=False))
 
+    promote, reason = should_promote(metrics_df)
+    print(f"\ngate: {reason}")
+    if not promote:
+        print("keeping incumbent bundle, skipping save and registry")
+        return
+
     print("\nsaving bundle...")
     save_bundle(models, feature_cols, city_codes, metrics_df)
 
@@ -180,7 +199,6 @@ def main():
     register_model(metrics_df)
 
     print("\ndone.")
-
 
 if __name__ == "__main__":
     main()
