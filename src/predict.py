@@ -109,8 +109,10 @@ def _conditions_frame(city: City):
     try:
         # forecast_days=4 so the +72h horizon is covered from any hour of day
         fc = fetch_forecast(city, past_days=1, forecast_days=4)
+        print(f"[conditions] {city.city_id}: fetch_forecast returned {len(fc)} rows")
         if not fc.empty:
             frame = add_aqi_columns(fc)
+            print(f"[conditions] {city.city_id}: add_aqi_columns ok, {len(frame)} rows")
     except Exception as exc:  # best effort only; conditions must never break predict
         print(f"[conditions] fetch failed for {city.city_id}: {exc!r}")
         frame = None
