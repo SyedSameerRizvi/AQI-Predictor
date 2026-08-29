@@ -111,7 +111,8 @@ def _conditions_frame(city: City):
         fc = fetch_forecast(city, past_days=1, forecast_days=4)
         if not fc.empty:
             frame = add_aqi_columns(fc)
-    except Exception:  # best effort only; conditions must never break predict
+    except Exception as exc:  # best effort only; conditions must never break predict
+        print(f"[conditions] fetch failed for {city.city_id}: {exc!r}")
         frame = None
 
     _conditions_cache[city.city_id] = (now, frame)
