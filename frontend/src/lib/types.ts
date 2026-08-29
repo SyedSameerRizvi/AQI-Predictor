@@ -1,13 +1,23 @@
-// src/lib/types.ts
-
 // one entry in the "forecast" array from predict_city
 export interface ForecastPoint {
   horizon_hours: number;
-  valid_at: string;           // ISO — parse to Date for the chart
+  valid_at: string;            // ISO parse to Date for the chart
   aqi: number;
   category: string;
   colour: string;
   model_accuracy: number;
+  conditions?: Conditions | null;   
+}
+
+// forecast weather + pollutant conditions at each horizon (Open-Meteo, best effort)
+export interface Conditions {
+  temperature: number | null;
+  humidity: number | null;
+  wind: number | null;
+  pm2_5: number | null;
+  pm10: number | null;
+  ozone: number | null;
+  dominant: string | null;
 }
 
 // the "current" object

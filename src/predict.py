@@ -1,28 +1,18 @@
-"""
-predict.py
-
-Live prediction for the trained (tier 1) cities. Loads the model bundle, fetches
-recent and forecast data from Open-Meteo, builds features, and returns the
-24/48/72 hour AQI forecast with a plain language explanation and the model's
-evaluated accuracy for that city and horizon. Only tier 1 cities are served, so
-every forecast has real measured accuracy behind it. No web framework here, the
-dashboard and the API both import and call these functions.
-"""
-
 import os
 import json
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
 
 import numpy as np
 import pandas as pd
 
 from src.cities import get_city, City, active_cities
 from src.config import FORECAST_HORIZONS
-from src.aqi import aqi_category
+from src.aqi import aqi_category, add_aqi_columns
 from src.pipelines.training_pipeline import load_model
 from src.feature_store import read_serving
+from src.data_sources import fetch_forecast
 
-# cache the bundle and metrics so load them once per process
+# cache the bundle and metrics so we load them once per process
 _bundle = None
 _metrics = None
 
@@ -85,6 +75,74 @@ def _latest_feature_row(city: City, bundle) -> pd.DataFrame:
     return usable.iloc[[-1]]
 
 
+# live forecast conditions are cached per city so we hit Open-Meteo at most
+# once every _FORECAST_TTL, and never on the model's critical path
+_conditions_cache = {}  # city_id -> (fetched_at, frame_or_None)
+_FORECAST_TTL = timedelta(minutes=30)
+
+
+def _num(v, ndigits=1):
+    # float rounded to ndigits (int when ndigits=0), or None for missing/NaN
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return None
+    if pd.isna(f):
+        return None
+    if ndigits == 0:
+        return int(round(f))
+    return round(f, ndigits)
+
+
+def _conditions_frame(city: City):
+    """
+    Open-Meteo forecast for the next few days with our AQI columns attached,
+    indexed by UTC hour. Cached per city. Returns None on any failure so the
+    forecast keeps working without it.
+    """
+    now = datetime.now(timezone.utc)
+    cached = _conditions_cache.get(city.city_id)
+    if cached and now - cached[0] < _FORECAST_TTL:
+        return cached[1]
+
+    frame = None
+    try:
+        # forecast_days=4 so the +72h horizon is covered from any hour of day
+        fc = fetch_forecast(city, past_days=1, forecast_days=4)
+        if not fc.empty:
+            frame = add_aqi_columns(fc)
+    except Exception:  # best effort only; conditions must never break predict
+        frame = None
+
+    _conditions_cache[city.city_id] = (now, frame)
+    return frame
+
+
+def _conditions_at(frame, valid_at):
+    # nearest hourly forecast row to a horizon timestamp, as a plain dict
+    if frame is None or frame.empty:
+        return None
+    try:
+        ts = pd.to_datetime(valid_at, utc=True)
+        idx = frame.index.get_indexer([ts], method="nearest")[0]
+        if idx < 0:
+            return None
+        r = frame.iloc[idx]
+    except Exception:
+        return None
+
+    dominant = r.get("aqi_dominant")
+    return {
+        "temperature": _num(r.get("temperature_2m"), 1),
+        "humidity": _num(r.get("relative_humidity_2m"), 0),
+        "wind": _num(r.get("wind_speed_10m"), 1),
+        "pm2_5": _num(r.get("pm2_5"), 1),
+        "pm10": _num(r.get("pm10"), 1),
+        "ozone": _num(r.get("ozone"), 1),
+        "dominant": str(dominant) if pd.notna(dominant) else None,
+    }
+
+
 def explain_prediction(bundle, horizon: int = 24) -> list[dict]:
     # real per-horizon SHAP drivers, computed at bundle-build time
     ranked = bundle.get(f"shap_importance_{horizon}h", [])
@@ -114,10 +172,11 @@ def explain_prediction(bundle, horizon: int = 24) -> list[dict]:
         })
     return out
 
+
 def predict_city(city_id: str) -> dict:
     """
     Full forecast for one trained city. Returns the current AQI, the 24/48/72
-    hour predictions with categories and the model's accuracy, the forecast
+    hour predictions with their categories, the model's accuracy, the forecast
     timestamps, and the top feature explanations. Only tier 1 cities are served.
     """
     city = get_city(city_id)
@@ -134,18 +193,22 @@ def predict_city(city_id: str) -> dict:
     now_time = row.index[-1]
     current_aqi = float(row["aqi"].iloc[-1])
 
+    cond_frame = _conditions_frame(city)
+
     predictions = []
     for h in FORECAST_HORIZONS:
         value = float(bundle["models"][h].predict(X)[0])
         value = max(0.0, round(value))  # AQI can't be negative
         name, colour = aqi_category(value)
+        valid_at = (now_time + timedelta(hours=h)).isoformat()
         predictions.append({
             "horizon_hours": h,
-            "valid_at": (now_time + timedelta(hours=h)).isoformat(),
+            "valid_at": valid_at,
             "aqi": value,
             "category": name,
             "colour": colour,
             "model_accuracy": _accuracy_for(city.city_id, h),
+            "conditions": _conditions_at(cond_frame, valid_at),
         })
 
     cur_name, cur_colour = aqi_category(current_aqi)
@@ -159,7 +222,7 @@ def predict_city(city_id: str) -> dict:
             "category": cur_name,
             "colour": cur_colour,
         },
-       "forecast": predictions,
+        "forecast": predictions,
         "explanations": {
             h: explain_prediction(bundle, h) for h in FORECAST_HORIZONS
         },
@@ -184,7 +247,7 @@ def list_served_cities() -> list[dict]:
     return [{"city_id": c.city_id, "name": c.name} for c in active_cities()]
 
 
-# --- CLI check --------------------------------------------------------------
+# --- CLI check ---
 # Run:  python -m src.predict
 
 if __name__ == "__main__":

@@ -15,6 +15,38 @@ const HORIZONS = [
   { h: 72, label: "Day 3", sub: "72H" },
 ] as const;
 
+const POLLUTANT_LABELS: Record<string, string> = {
+  pm2_5: "PM2.5",
+  pm10: "PM10",
+  ozone: "Ozone",
+  carbon_monoxide: "CO",
+  nitrogen_dioxide: "NO2",
+  sulphur_dioxide: "SO2",
+};
+
+// one metric cell in the conditions strip
+function Cond({
+  label,
+  value,
+  unit,
+  strong,
+}: {
+  label: string;
+  value: number | null;
+  unit?: string;
+  strong?: boolean;
+}) {
+  return (
+    <div className={strong ? "text-white" : ""}>
+      <div className="text-white/30">{label}</div>
+      <div className="font-semibold">
+        {value == null ? "—" : value}
+        {unit ? <span className="ml-0.5 text-white/30">{unit}</span> : null}
+      </div>
+    </div>
+  );
+}
+
 export function HorizonTimeline({ data, metrics }: HorizonTimelineProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -23,6 +55,7 @@ export function HorizonTimeline({ data, metrics }: HorizonTimelineProps) {
         const m = metrics.find((x) => x.horizon === h);
         if (!point) return null;
         const band = bandForAqi(point.aqi);
+        const c = point.conditions;
 
         return (
           <motion.div
@@ -68,6 +101,29 @@ export function HorizonTimeline({ data, metrics }: HorizonTimelineProps) {
                   no accuracy data
                 </div>
               )}
+
+              {/* forecast conditions strip: Open-Meteo weather + pollutants at this horizon */}
+              {c && (
+                <div className="mt-4 border-t border-white/10 pt-3">
+                  <div className="font-mono text-[10px] uppercase tracking-wide text-white/30">
+                    forecast conditions
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-x-3 gap-y-2 font-mono text-[11px] text-white/55">
+                    <Cond label="TEMP" value={c.temperature} unit="°C" />
+                    <Cond label="HUM" value={c.humidity} unit="%" />
+                    <Cond label="WIND" value={c.wind} unit="km/h" />
+                    <Cond label="PM2.5" value={c.pm2_5} strong={c.dominant === "pm2_5"} />
+                    <Cond label="PM10" value={c.pm10} strong={c.dominant === "pm10"} />
+                    <Cond label="O3" value={c.ozone} strong={c.dominant === "ozone"} />
+                  </div>
+                  <div className="mt-2 font-mono text-[10px] uppercase text-white/35">
+                    µg/m³
+                    {c.dominant
+                      ? ` · dominant ${POLLUTANT_LABELS[c.dominant] ?? c.dominant}`
+                      : ""}
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         );
@@ -75,4 +131,3 @@ export function HorizonTimeline({ data, metrics }: HorizonTimelineProps) {
     </div>
   );
 }
-
