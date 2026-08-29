@@ -15,10 +15,10 @@ The data stays current on its own. A feature pipeline runs every hour to pull fr
 
 The system is five pieces wired in a line, plus two schedulers that keep it running.
 
-1. **Data.** We pull weather and pollutant history from Open-Meteo. No API key, and the free tier gives us the historical depth we need for training.
+1. **Data.** Pulls the weather and pollutant history from OpenMeteo. No API key, and the free tier gives the historical depth that is needed for training.
 2. **Features.** Raw data gets turned into model ready features: lags and rolling stats for AQI and PM values, cyclical time encodings (hour and month as sin and cos), and weather dispersion features like wind vectors, surface pressure, and a stagnation index. The forecast targets are the only thing that looks forward. Everything else is known at prediction time, so there is no leakage.
 3. **Feature store.** Features land in Hopsworks Serverless. Training reads the full history from here, and a lightweight serving feature group (one overwritten row per city, keyed by city id) feeds live predictions without loading the heavy engine.
-4. **Model.** We train a pooled XGBoost model, one per horizon, across the tier 1 cities. Metrics (RMSE, MAE, R2) are computed per city and per horizon on a chronological hold out split. SHAP values are computed once and baked into the model bundle so the frontend can show real feature importance per horizon.
+4. **Model.** Then train a pooled XGBoost model, one per horizon, across the tier 1 cities. Metrics (RMSE, MAE, R2) are computed per city and per horizon on a chronological hold out split. SHAP values are computed once and baked into the model bundle so the frontend can show real feature importance per horizon.
 5. **Serving.** A FastAPI backend loads the model bundle, reads the serving vector, builds the forecast, and returns it along with an AI written summary (Groq) and recent AQI news (GNews). A React frontend renders the forecast chart, the horizon cards, the SHAP drivers panel, and the alerts.
 
 ### Automation
