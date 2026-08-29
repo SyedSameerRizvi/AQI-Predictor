@@ -3,8 +3,7 @@
 US EPA Air Quality Index calculation.
 
 Two layers:
-  1. Pure functions on single values, in the EPA's own units. Directly testable
-     against the published table (see tests/test_aqi.py).
+  1. Pure functions on single values, in the EPA's own units.
   2. A dataframe helper that takes Open-Meteo hourly data (all in ug/m3), applies
      the correct per-pollutant averaging window, converts gases to ppm/ppb, and
      returns overall AQI + the pollutant driving it.
@@ -46,7 +45,7 @@ BREAKPOINTS = {
     ],
     # O3 breakpoints in ppm, 8h average. The 8h table only defines up to 300;
     # values above that are rare and would need the 1h table. We cap at the top
-    # of the 8h range and document it — 8h ozone above 0.2 ppm essentially never
+    # of the 8h range and document it 8h ozone above 0.2 ppm essentially never
     # occurs in this dataset.
     "ozone": [
         (0.000, 0.054, 0, 50),

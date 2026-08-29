@@ -22,7 +22,7 @@ from src.aqi import aqi_category
 from src.pipelines.training_pipeline import load_model
 from src.feature_store import read_serving
 
-# cache the bundle and metrics so we load them once per process
+# cache the bundle and metrics so load them once per process
 _bundle = None
 _metrics = None
 

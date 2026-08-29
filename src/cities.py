@@ -2,7 +2,7 @@
 City registry. Pakistan.
 
 Tiering:
-  tier 1 -> full pipeline: 2-year backfill, hourly updates, in training,
+  tier 1 -> full pipeline: 2 year backfill, hourly updates, in training,
             instant dashboard load.
   tier 2 -> selectable, scored live on demand with the global model.
             No stored history.

@@ -1,9 +1,5 @@
 """
 Metrics for scoring AQI forecasts, computed per city and per horizon.
-Provides RMSE, MAE, and R2 (the mentor benchmark metrics), plus a skill score
-that measures improvement over a baseline, a target checker that flags whether
-a result clears the benchmark (R2 >= 0.7, RMSE <= 30, MAE <= 20), and a helper
-to collect all results into one comparison table.
 """
 
 # metrics for model evaluation, per horizon and per city

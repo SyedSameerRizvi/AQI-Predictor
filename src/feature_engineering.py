@@ -7,7 +7,7 @@ Two structural safeguards:
      invisible bug).
   2. All lag / rolling / change features look strictly backward (trailing
      windows ending at t). The targets are the only thing that looks forward,
-     and they are the actual observed future AQI — which is exactly what a
+     and they are the actual observed future AQI which is exactly what a
      target should be.
 
 """
@@ -20,7 +20,7 @@ from src.cities import get_city
 from src.config import FORECAST_HORIZONS
 
 
-LAG_BASES = ["aqi", "pm2_5"]                       # columns we take lags of
+LAG_BASES = ["aqi", "pm2_5"]                       # columns taken lags of
 LAG_HOURS = [1, 2, 3, 6, 12, 24, 48, 72, 168]     # incl. one week (168h)
 ROLL_WINDOWS = [6, 12, 24, 72]                     # rolling stat windows (h)
 CHANGE_HOURS = [1, 3, 6, 24]                       # rate-of-change windows (h)
@@ -55,7 +55,7 @@ def _time_features(local_index: pd.DatetimeIndex) -> pd.DataFrame:
 def _weather_features(g: pd.DataFrame) -> pd.DataFrame:
     """
     Weather is derived from features. These use the current hour's weather, which is
-    legitimately known at prediction time because at inference we have a real
+    legitimately known at prediction time because at inference have a real
     weather forecast for the horizon. (Pollutant values are NOT future known,
     which is why it never takes future pollutant values anywhere.)
     """
@@ -101,7 +101,7 @@ def _features_for_one_city(g: pd.DataFrame, city_id: str) -> pd.DataFrame:
     tf.index = g.index  # keep the canonical UTC index for alignment
     feats = feats.join(tf)
 
-    # 4. Weather-derived.
+    # 4. Weather features derived from current hour's weather. These are known at prediction time because we have a weather forecast for the horizon.
     feats = feats.join(_weather_features(g))
 
     # 5. Lags strictly past.

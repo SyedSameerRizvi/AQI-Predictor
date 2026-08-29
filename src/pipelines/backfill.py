@@ -1,5 +1,5 @@
 """
-Backfill historical features for tier-1 cities.
+Backfill historical features for tier 1 cities.
 
 Per city: fetch the full raw history in one continuous frame 
 """

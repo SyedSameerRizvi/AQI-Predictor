@@ -22,6 +22,7 @@ from src.feature_store import read_all
 from src.feature_engineering import get_feature_columns, TARGETS
 from src.config import FORECAST_HORIZONS, MODEL_NAME
 from src.evaluation import score_all
+from src.cities import active_cities
 
 load_dotenv()
 
@@ -40,6 +41,8 @@ METRICS_PATH = os.path.join(MODEL_DIR, "metrics.json")
 def load_and_split():
     # read all stored cities, keep rows with complete features and targets
     df = read_all()
+    active_ids = {c.city_id for c in active_cities()}
+    df = df[df["city_id"].isin(active_ids)]
     cols = get_feature_columns(df) + TARGETS
     data = df.dropna(subset=cols).sort_index()
 

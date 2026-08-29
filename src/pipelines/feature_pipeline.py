@@ -1,12 +1,12 @@
 """
-Hourly feature pipeline. For each tier-1 city we fetch the recent window from
+Hourly feature pipeline. For each tier 1 city fetches the recent window from
 Open-Meteo, build features, and upsert them to the Hopsworks feature store.
 This runs on a schedule so the dashboard reads features from the store and
 never calls Open-Meteo at request time.
 
 Writes to two groups:
 - aqi_features (history, keyed by city_id + timestamp) for retraining
-- aqi_serving (latest row per city, keyed by city_id) for low-latency reads
+- aqi_serving (latest row per city, keyed by city_id) for low latency reads
 """
 
 import pandas as pd

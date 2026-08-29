@@ -2,7 +2,7 @@
 Hopsworks feature store access: connect, write, read.
 
 Timestamps live on the DataFrame index everywhere else in the codebase, but
-Hopsworks needs the primary key and event time as columns, so we reset the
+Hopsworks needs the primary key and event time as columns, so reset the
 index and expose a tz-naive UTC `timestamp` column before writing.
 
 Primary key is composite: (city_id, timestamp). This is what lets hourly runs
@@ -24,7 +24,8 @@ load_dotenv()
 from hsfs.statistics_config import StatisticsConfig
 
 
-# cached across calls so we log in once per process
+
+# cached across calls so it is logged in once per process
 _project = None
 _fs = None
 _fg = None
