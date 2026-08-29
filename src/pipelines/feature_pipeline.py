@@ -51,7 +51,8 @@ def run() -> dict:
     insert_features(feats)
 
     # latest row per city -> serving group (low-latency reads)
-    latest = feats.groupby("city_id").tail(1)
+    now = pd.Timestamp.now(tz="UTC")
+    latest = feats[feats.index <= now].groupby("city_id").tail(1)
     print(f"writing {len(latest)} serving rows")
     write_serving(latest)
 
