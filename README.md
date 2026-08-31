@@ -3,7 +3,7 @@
 Hourly US EPA AQI forecasts for the next 72 hours across major Pakistani cities, served from an end to end serverless MLOps pipeline.
 
 Live app: https://pakaqipredictor.netlify.app
-API: https://aqi-predictor-uid9.onrender.com
+API: [https://aqi-predictor-uid9.onrender.com](https://aqi-predictor-uid9.onrender.com)
 
 ## What it does
 
