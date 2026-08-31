@@ -58,7 +58,7 @@ Two GitHub Actions workflows keep the system fresh.
 
 ## Cities
 
-Five tier 1 cities run the full pipeline with two years of backfilled hourly history and their own trained models: Karachi, Lahore, Islamabad, Peshawar, and Faisalabad. The forecast is strongest at 24 hours and, as expected for air quality, gets harder at 48 and 72 hours. I reported the real per city metrics rather than hiding the harder horizons.
+6 tier 1 cities run the full pipeline with two years of backfilled hourly history and their own trained models: Karachi, Lahore, Islamabad, Peshawar, Faisalabad and Quetta. The forecast is strongest at 24 hours and, as expected for air quality, gets harder at 48 and 72 hours. I reported the real per city metrics rather than hiding the harder horizons.
 
 Other cities sit in the registry as tier 2 and are not part of the trained pipeline. Promoting or demoting a city is a one line change to its tier in `src/cities.py`.
 
