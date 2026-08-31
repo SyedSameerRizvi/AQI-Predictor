@@ -31,7 +31,7 @@ Two GitHub Actions workflows keep the system fresh.
 ## Tech stack
 
 **Data and features**
-- Open-Meteo (weather and pollutant data)
+- OpenMeteo (weather and pollutant data)
 - Hopsworks Serverless (feature store, online enabled, HUDI write path)
 
 **Modelling**
